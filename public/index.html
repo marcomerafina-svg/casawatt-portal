@@ -80,7 +80,7 @@
 
   .stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 32px;
   }
@@ -167,14 +167,24 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
 
+  .table-scroll-top,
   .table-scroll {
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border-bright) transparent;
   }
+  .table-scroll-top {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+  .table-scroll-top-inner { height: 1px; }
+  .table-scroll-top::-webkit-scrollbar,
   .table-scroll::-webkit-scrollbar { height: 12px; }
+  .table-scroll-top::-webkit-scrollbar-track,
   .table-scroll::-webkit-scrollbar-track { background: var(--surface-alt); }
+  .table-scroll-top::-webkit-scrollbar-thumb,
   .table-scroll::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 6px; border: 3px solid var(--surface-alt); }
+  .table-scroll-top::-webkit-scrollbar-thumb:hover,
   .table-scroll::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
   table { width: 100%; border-collapse: collapse; min-width: 1500px; }
@@ -372,7 +382,6 @@
     <div class="stat-card"><div class="stat-label">Total leads</div><div class="stat-value" id="s-total">—</div></div>
     <div class="stat-card"><div class="stat-label">Signés</div><div class="stat-value accent" id="s-won">—</div></div>
     <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value blue" id="s-active">—</div></div>
-    <div class="stat-card"><div class="stat-label">Commissions (10%)</div><div class="stat-value amber" id="s-commission">—</div></div>
   </div>
 
   <div class="controls">
@@ -386,7 +395,8 @@
   <div id="error-area"></div>
 
   <div class="table-wrap">
-    <div class="table-scroll">
+    <div class="table-scroll-top" id="scroll-top"><div class="table-scroll-top-inner" id="scroll-top-inner"></div></div>
+    <div class="table-scroll" id="scroll-main">
       <table>
         <thead>
           <tr>
@@ -574,16 +584,9 @@ function computeStats() {
     const s = d.properties.dealstage;
     return !['2145974479','2145974480','2145974481'].includes(s);
   }).length;
-  const totalAmount = allDeals
-    .filter(d => d.properties.dealstage === '2145974479' && d.properties[PROP_AMOUNT_HT])
-    .reduce((s, d) => s + parseFloat(d.properties[PROP_AMOUNT_HT]), 0);
-  const commission = totalAmount * 0.1;
-
   document.getElementById('s-total').textContent = total.toLocaleString('fr');
   document.getElementById('s-won').textContent = won.toLocaleString('fr');
   document.getElementById('s-active').textContent = active.toLocaleString('fr');
-  document.getElementById('s-commission').textContent =
-    commission > 0 ? `${commission.toLocaleString('fr', {minimumFractionDigits:0, maximumFractionDigits:0})} €` : '—';
 }
 
 function setFilter(f, btn) {
@@ -680,7 +683,38 @@ function changePage(dir) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-loadAllDeals();
+// Sync top and bottom horizontal scrollbars
+function syncScrollbars() {
+  const top = document.getElementById('scroll-top');
+  const main = document.getElementById('scroll-main');
+  const inner = document.getElementById('scroll-top-inner');
+  if (!top || !main || !inner) return;
+
+  const updateWidth = () => {
+    const table = main.querySelector('table');
+    if (table) inner.style.width = table.scrollWidth + 'px';
+  };
+  updateWidth();
+
+  let lock = false;
+  top.addEventListener('scroll', () => {
+    if (lock) return;
+    lock = true;
+    main.scrollLeft = top.scrollLeft;
+    requestAnimationFrame(() => { lock = false; });
+  });
+  main.addEventListener('scroll', () => {
+    if (lock) return;
+    lock = true;
+    top.scrollLeft = main.scrollLeft;
+    requestAnimationFrame(() => { lock = false; });
+  });
+
+  new ResizeObserver(updateWidth).observe(main);
+  window.addEventListener('resize', updateWidth);
+}
+
+loadAllDeals().then(syncScrollbars);
 </script>
 </body>
 </html>
