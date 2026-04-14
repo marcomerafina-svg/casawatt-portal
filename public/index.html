@@ -370,11 +370,10 @@
             <th>Phase</th>
             <th>Montant HT</th>
             <th>Date installation</th>
-            <th>Installation finalisée</th>
           </tr>
         </thead>
         <tbody id="tbody">
-          <tr><td colspan="12"><div class="loading"><div class="spinner"></div>Chargement des leads...</div></td></tr>
+          <tr><td colspan="11"><div class="loading"><div class="spinner"></div>Chargement des leads...</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -395,12 +394,11 @@
 const PIPELINE = '1378495685';
 const PAGE_SIZE = 20;
 
-// Proprietà custom del deal — metti qui il nome "internal" HubSpot.
-// Se non esistono o il nome è diverso, la cella resterà "—".
-const PROP_DATE_CONTACT      = 'date_de_prise_de_contact';     // Date de prise de contact
-const PROP_COMMENT           = 'description';                  // Commentaire (di default uso description)
-const PROP_DATE_INSTALLATION = 'date_installation_programmee'; // Date d'installation programmée
-const PROP_INSTALL_DONE      = 'installation_finalisee';       // Installation finalisée (checkbox o enum)
+// Proprietà custom del deal (nomi interni HubSpot)
+const PROP_ADDRESS           = 'fr___adresse_d_installation';  // Adresse
+const PROP_COMMENT           = 'fr___commentaire';             // Commentaire
+const PROP_AMOUNT_HT         = 'fr___ca_ht';                   // Montant HT
+const PROP_DATE_INSTALLATION = 'fr___date_d_installation';     // Date d'installation
 
 const STAGES = {
   '2906355919': { label: 'New leads - To dispatch', cls: 'stage-new' },
@@ -451,8 +449,7 @@ async function fetchDealPage(after) {
     }],
     properties: [
       'dealname','dealstage','amount','createdate','hs_lastmodifieddate',
-      'address','city','zip',
-      PROP_DATE_CONTACT, PROP_COMMENT, PROP_DATE_INSTALLATION, PROP_INSTALL_DONE
+      PROP_ADDRESS, PROP_COMMENT, PROP_AMOUNT_HT, PROP_DATE_INSTALLATION
     ],
     sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
     limit: 100
@@ -535,7 +532,7 @@ async function loadAllDeals() {
     document.getElementById('error-area').innerHTML =
       `<div class="error-msg">Erreur de chargement: ${e.message}</div>`;
     document.getElementById('tbody').innerHTML =
-      `<tr><td colspan="12"><div class="loading">Impossible de charger les données.</div></td></tr>`;
+      `<tr><td colspan="11"><div class="loading">Impossible de charger les données.</div></td></tr>`;
   }
 }
 
@@ -547,8 +544,8 @@ function computeStats() {
     return !['2145974479','2145974480','2145974481'].includes(s);
   }).length;
   const totalAmount = allDeals
-    .filter(d => d.properties.dealstage === '2145974479' && d.properties.amount)
-    .reduce((s, d) => s + parseFloat(d.properties.amount), 0);
+    .filter(d => d.properties.dealstage === '2145974479' && d.properties[PROP_AMOUNT_HT])
+    .reduce((s, d) => s + parseFloat(d.properties[PROP_AMOUNT_HT]), 0);
   const commission = totalAmount * 0.1;
 
   document.getElementById('s-total').textContent = total.toLocaleString('fr');
@@ -582,7 +579,7 @@ function filterDeals() {
       const c = contactOf(d);
       const hay = [
         c.firstname, c.lastname, c.email, c.phone,
-        d.properties.dealname, d.properties.address, d.properties.city, d.properties.zip
+        d.properties.dealname, d.properties[PROP_ADDRESS]
       ].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
@@ -599,20 +596,6 @@ function formatDate(iso) {
   return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
 }
 
-function formatAddress(p) {
-  const parts = [p.address, [p.zip, p.city].filter(Boolean).join(' ')].filter(Boolean);
-  return parts.length ? parts.join('<br>') : '—';
-}
-
-function formatBool(v) {
-  if (v === true || v === 'true' || v === 'yes' || v === 'Oui' || v === 'oui' || v === '1') {
-    return `<span class="check-yes">Oui</span>`;
-  }
-  if (!v) return `<span class="check-no">—</span>`;
-  // enum / string value
-  return `<span class="check-yes">${escapeHtml(String(v))}</span>`;
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -623,7 +606,7 @@ function renderTable() {
   const page = filteredDeals.slice(start, start + PAGE_SIZE);
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="loading">Aucun résultat trouvé.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11"><div class="loading">Aucun résultat trouvé.</div></td></tr>`;
     document.getElementById('pagination').style.display = 'none';
     return;
   }
@@ -632,22 +615,22 @@ function renderTable() {
     const p = d.properties;
     const c = contactOf(d);
     const stage = STAGES[p.dealstage] || { label: p.dealstage || '—', cls: 'stage-default' };
-    const amount = p.amount ? parseFloat(p.amount) : null;
+    const amount = p[PROP_AMOUNT_HT] ? parseFloat(p[PROP_AMOUNT_HT]) : null;
     const comment = p[PROP_COMMENT];
+    const address = p[PROP_ADDRESS];
 
     return `<tr>
       <td class="td-name">${escapeHtml(c.lastname || '—')}</td>
       <td>${escapeHtml(c.firstname || '—')}</td>
       <td class="td-mono">${escapeHtml(c.phone || '—')}</td>
       <td class="td-mono">${c.email ? `<a href="mailto:${escapeHtml(c.email)}" style="color:var(--blue);text-decoration:none;">${escapeHtml(c.email)}</a>` : '—'}</td>
-      <td class="td-addr">${formatAddress(p)}</td>
+      <td class="td-addr">${address ? escapeHtml(address) : '—'}</td>
       <td class="td-mono">${formatDate(p.createdate)}</td>
-      <td class="td-mono">${formatDate(p[PROP_DATE_CONTACT])}</td>
+      <td class="td-mono">${formatDate(p.createdate)}</td>
       <td class="td-wrap">${comment ? escapeHtml(comment) : '<span class="check-no">—</span>'}</td>
       <td><span class="stage ${stage.cls}"><span class="stage-dot"></span>${stage.label}</span></td>
       <td>${amount ? `<span class="amount">${amount.toLocaleString('fr', {minimumFractionDigits:2})} €</span>` : '<span class="amount amount-empty">—</span>'}</td>
       <td class="td-mono">${formatDate(p[PROP_DATE_INSTALLATION])}</td>
-      <td>${formatBool(p[PROP_INSTALL_DONE])}</td>
     </tr>`;
   }).join('');
 
