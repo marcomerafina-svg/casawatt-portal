@@ -430,36 +430,29 @@
 
 <script>
 // ======================================================================
-// CONFIG — edita qui se i nomi interni delle proprietà HubSpot cambiano
+// CONFIG
 // ======================================================================
-const PIPELINE = '1378495685';
 const PAGE_SIZE = 20;
 
-// Proprietà custom del deal (nomi interni HubSpot)
-const PROP_ADDRESS           = 'fr___adresse_d_installation';  // Adresse
-const PROP_COMMENT           = 'fr___commentaire';             // Commentaire
-const PROP_AMOUNT_HT         = 'fr___ca_ht';                   // Montant HT
-const PROP_DATE_INSTALLATION = 'fr___date_d_installation';     // Date d'installation
+// Pipeline da includere: per ID (esatto) o per NAME (match case-insensitive sul label)
+const PIPELINE_IDS = ['1378495685'];                       // pipeline Casawatt originale
+const PIPELINE_NAME_MATCHES = ['giovy france - ops'];      // nuova pipeline OPS (match substring)
 
-const STAGES = {
-  '2906355919': { label: 'New leads - To dispatch', cls: 'stage-new' },
-  '1888030966': { label: 'New Leads - Giovy',       cls: 'stage-new' },
-  '1887728886': { label: 'Relance 1',               cls: 'stage-active' },
-  '1887728887': { label: 'Relance 2',               cls: 'stage-active' },
-  '1887728888': { label: 'Relance 3',               cls: 'stage-active' },
-  '1887729850': { label: 'Rendez-vous planifié',    cls: 'stage-active' },
-  '1887728889': { label: 'Visite technique',        cls: 'stage-active' },
-  '2194285777': { label: 'En attente photo',        cls: 'stage-active' },
-  '1887729851': { label: 'Devis à faire',           cls: 'stage-active' },
-  '2145974478': { label: 'Devis envoyé',            cls: 'stage-active' },
-  '2145974479': { label: 'Signé',                   cls: 'stage-won' },
-  '2145974480': { label: 'Fermé perdu',             cls: 'stage-lost' },
-  '2145974481': { label: 'Nurturing',               cls: 'stage-default' },
-  '2906355932': { label: 'New leads - VAR',         cls: 'stage-new' },
-};
+// Proprietà custom del deal (nomi interni HubSpot)
+const PROP_ADDRESS           = 'fr___adresse_d_installation';
+const PROP_COMMENT           = 'fr___commentaire';
+const PROP_AMOUNT_HT         = 'fr___ca_ht';
+const PROP_DATE_INSTALLATION = 'fr___date_d_installation';
+
+// Costruito al volo dal pipelines endpoint di HubSpot
+let STAGES = {};        // stageId -> { label, cls }
+let WON_STAGES = new Set();
+let LOST_STAGES = new Set();
+let CLOSED_STAGES = new Set();
+let ACTIVE_PIPELINE_IDS = [];
 
 let allDeals = [];
-let contactMap = {}; // contactId -> { firstname, lastname, email, phone }
+let contactMap = {};
 let filteredDeals = [];
 let currentFilter = 'all';
 let currentPage = 0;
@@ -467,11 +460,11 @@ let currentPage = 0;
 // -----------------------------------------------------------------------
 // API helpers
 // -----------------------------------------------------------------------
-async function hubspotCall(path, body) {
+async function hubspotCall(path, body, method = 'POST') {
   const res = await fetch('/api/deals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, body })
+    body: JSON.stringify({ path, method, body })
   });
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
@@ -480,16 +473,53 @@ async function hubspotCall(path, body) {
   return res.json();
 }
 
+async function loadPipelines() {
+  const data = await hubspotCall('/crm/v3/pipelines/deals', null, 'GET');
+  const matched = (data.results || []).filter(p => {
+    if (PIPELINE_IDS.includes(p.id)) return true;
+    const label = (p.label || '').toLowerCase();
+    return PIPELINE_NAME_MATCHES.some(n => label.includes(n.toLowerCase()));
+  });
+
+  ACTIVE_PIPELINE_IDS = matched.map(p => p.id);
+  STAGES = {};
+  WON_STAGES = new Set();
+  LOST_STAGES = new Set();
+  CLOSED_STAGES = new Set();
+
+  matched.forEach(p => {
+    (p.stages || []).forEach(s => {
+      const label = s.label || '';
+      const meta = s.metadata || {};
+      const isClosed = meta.isClosed === 'true' || meta.isClosed === true;
+      const prob = parseFloat(meta.probability);
+      let cls = 'stage-active';
+      if (isClosed && prob === 1) { cls = 'stage-won'; WON_STAGES.add(s.id); CLOSED_STAGES.add(s.id); }
+      else if (isClosed && prob === 0) { cls = 'stage-lost'; LOST_STAGES.add(s.id); CLOSED_STAGES.add(s.id); }
+      else if (isClosed) { cls = 'stage-default'; CLOSED_STAGES.add(s.id); }
+      else if (/new|nouveau/i.test(label)) cls = 'stage-new';
+      else if (/nurturing/i.test(label)) cls = 'stage-default';
+      STAGES[s.id] = { label, cls };
+    });
+  });
+
+  if (ACTIVE_PIPELINE_IDS.length === 0) {
+    throw new Error('Nessuna pipeline trovata. Controlla CONFIG PIPELINE_IDS / PIPELINE_NAME_MATCHES.');
+  }
+}
+
 async function fetchDealPage(after) {
+  // One filterGroup per pipeline; filterGroups are OR'd together
+  const filterGroups = ACTIVE_PIPELINE_IDS.map(pid => ({
+    filters: [
+      { propertyName: 'pipeline', operator: 'EQ', value: pid },
+      { propertyName: 'dealname', operator: 'CONTAINS_TOKEN', value: 'Casawatt' }
+    ]
+  }));
   const body = {
-    filterGroups: [{
-      filters: [
-        { propertyName: 'pipeline', operator: 'EQ', value: PIPELINE },
-        { propertyName: 'dealname', operator: 'CONTAINS_TOKEN', value: 'Casawatt' }
-      ]
-    }],
+    filterGroups,
     properties: [
-      'dealname','dealstage','amount','createdate','hs_lastmodifieddate',
+      'dealname','dealstage','pipeline','amount','createdate','hs_lastmodifieddate',
       PROP_ADDRESS, PROP_COMMENT, PROP_AMOUNT_HT, PROP_DATE_INSTALLATION
     ],
     sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
@@ -539,6 +569,9 @@ async function fetchContacts(contactIds) {
 // -----------------------------------------------------------------------
 async function loadAllDeals() {
   try {
+    // 0. Load pipelines + stages dynamically
+    await loadPipelines();
+
     // 1. Fetch deals (max 500)
     let after = null;
     let all = [];
@@ -579,11 +612,8 @@ async function loadAllDeals() {
 
 function computeStats() {
   const total = allDeals.length;
-  const won = allDeals.filter(d => d.properties.dealstage === '2145974479').length;
-  const active = allDeals.filter(d => {
-    const s = d.properties.dealstage;
-    return !['2145974479','2145974480','2145974481'].includes(s);
-  }).length;
+  const won = allDeals.filter(d => WON_STAGES.has(d.properties.dealstage)).length;
+  const active = allDeals.filter(d => !CLOSED_STAGES.has(d.properties.dealstage)).length;
   document.getElementById('s-total').textContent = total.toLocaleString('fr');
   document.getElementById('s-won').textContent = won.toLocaleString('fr');
   document.getElementById('s-active').textContent = active.toLocaleString('fr');
@@ -605,9 +635,9 @@ function filterDeals() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   filteredDeals = allDeals.filter(d => {
     const stage = d.properties.dealstage;
-    if (currentFilter === 'active' && ['2145974479','2145974480','2145974481'].includes(stage)) return false;
-    if (currentFilter === 'won' && stage !== '2145974479') return false;
-    if (currentFilter === 'lost' && stage !== '2145974480') return false;
+    if (currentFilter === 'active' && CLOSED_STAGES.has(stage)) return false;
+    if (currentFilter === 'won' && !WON_STAGES.has(stage)) return false;
+    if (currentFilter === 'lost' && !LOST_STAGES.has(stage)) return false;
 
     if (q) {
       const c = contactOf(d);
