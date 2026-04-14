@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casawatt × Giovy — Suivi des leads</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --border-bright: #2e2e44;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --accent: #4fd1a8;
+    --accent-dim: rgba(79,209,168,0.12);
+    --red: #ff6b6b;
+    --amber: #f0c060;
+    --blue: #6b9eff;
+    --purple: #a78bfa;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Grid noise texture */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap { position:relative; z-index:1; max-width: 1200px; margin:0 auto; padding: 0 24px 60px; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-badge {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .logo-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(79,209,168,0.4); }
+    50% { opacity:0.7; box-shadow: 0 0 0 6px rgba(79,209,168,0); }
+  }
+
+  .live-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Stats row */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border-bright); }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.blue { color: var(--blue); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    background: #0d0d14;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 14px 20px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td {
+    padding: 16px 20px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .td-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .td-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .td-mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Stage badge */
+  .stage {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    border: 1px solid;
+  }
+
+  .stage-dot { width:6px; height:6px; border-radius:50%; }
+
+  .stage-new    { background: rgba(107,158,255,0.1); border-color: rgba(107,158,255,0.3); color: var(--blue); }
+  .stage-new .stage-dot { background: var(--blue); }
+
+  .stage-active { background: rgba(240,192,96,0.1); border-color: rgba(240,192,96,0.3); color: var(--amber); }
+  .stage-active .stage-dot { background: var(--amber); }
+
+  .stage-won    { background: rgba(79,209,168,0.1); border-color: rgba(79,209,168,0.3); color: var(--accent); }
+  .stage-won .stage-dot { background: var(--accent); }
+
+  .stage-lost   { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: var(--red); }
+  .stage-lost .stage-dot { background: var(--red); }
+
+  .stage-default { background: rgba(107,107,136,0.1); border-color: rgba(107,107,136,0.3); color: var(--muted); }
+  .stage-default .stage-dot { background: var(--muted); }
+
+  /* Amount */
+  .amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .amount-empty { color: var(--border-bright); }
+
+  /* Loading / empty */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 16px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .page-info {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .page-btns { display: flex; gap: 8px; }
+
+  .page-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Error */
+  .error-msg {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 10px;
+    padding: 20px 24px;
+    color: var(--red);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    margin: 20px 0;
+  }
+
+  /* Commission highlight */
+  .commission {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  @media (max-width: 768px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    th:nth-child(n+4), td:nth-child(n+4) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CASAWATT</div>
+      <div>
+        <div class="logo-title">Suivi des leads × Giovy France</div>
+        <div class="logo-sub">Pipeline en temps réel</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <span class="live-label">Live</span>
+    </div>
+  </header>
+
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="stat-label">Total leads</div><div class="stat-value" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Signés</div><div class="stat-value accent" id="s-won">—</div></div>
+    <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value blue" id="s-active">—</div></div>
+    <div class="stat-card"><div class="stat-label">Commissions (10%)</div><div class="stat-value amber" id="s-commission">—</div></div>
+  </div>
+
+  <div class="controls">
+    <input class="search-box" id="search" placeholder="Rechercher par nom, email, téléphone..." oninput="filterDeals()">
+    <button class="filter-btn active" onclick="setFilter('all', this)">Tous</button>
+    <button class="filter-btn" onclick="setFilter('active', this)">En cours</button>
+    <button class="filter-btn" onclick="setFilter('won', this)">Signés</button>
+    <button class="filter-btn" onclick="setFilter('lost', this)">Perdus</button>
+  </div>
+
+  <div id="error-area"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Contact</th>
+          <th>Adresse</th>
+          <th>Date réception</th>
+          <th>Phase</th>
+          <th>Montant HT</th>
+          <th>Commission</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Chargement des leads...</div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination" style="display:none">
+      <span class="page-info" id="page-info"></span>
+      <div class="page-btns">
+        <button class="page-btn" id="btn-prev" onclick="changePage(-1)">← Précédent</button>
+        <button class="page-btn" id="btn-next" onclick="changePage(1)">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PIPELINE = '1378495685';
+const PAGE_SIZE = 20;
+
+const STAGES = {
+  '2906355919': { label: 'New leads - To dispatch', cls: 'stage-new' },
+  '1888030966': { label: 'New Leads - Giovy',       cls: 'stage-new' },
+  '1887728886': { label: 'Relance 1',               cls: 'stage-active' },
+  '1887728887': { label: 'Relance 2',               cls: 'stage-active' },
+  '1887728888': { label: 'Relance 3',               cls: 'stage-active' },
+  '1887729850': { label: 'Rendez-vous planifié',    cls: 'stage-active' },
+  '1887728889': { label: 'Visite technique',        cls: 'stage-active' },
+  '2194285777': { label: 'En attente photo',        cls: 'stage-active' },
+  '1887729851': { label: 'Devis à faire',           cls: 'stage-active' },
+  '2145974478': { label: 'Devis envoyé',            cls: 'stage-active' },
+  '2145974479': { label: 'Signé',                   cls: 'stage-won' },
+  '2145974480': { label: 'Fermé perdu',             cls: 'stage-lost' },
+  '2145974481': { label: 'Nurturing',               cls: 'stage-default' },
+  '2906355932': { label: 'New leads - VAR',         cls: 'stage-new' },
+};
+
+let allDeals = [];
+let filteredDeals = [];
+let currentFilter = 'all';
+let currentPage = 0;
+let cursors = [null];
+
+async function fetchPage(after) {
+  const body = {
+    filterGroups: [{ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: PIPELINE }] }],
+    properties: ['dealname','dealstage','amount','createdate','hs_lastmodifieddate',
+                 'phone','email','address','city','zip'],
+    sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
+    limit: 100
+  };
+  if (after) body.after = after;
+
+  const res = await fetch('/api/deals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) throw new Error(`HubSpot API error: ${res.status}`);
+  return res.json();
+}
+
+async function loadAllDeals() {
+  try {
+    let after = null;
+    let all = [];
+    // load up to 500 deals (5 pages of 100)
+    for (let i = 0; i < 5; i++) {
+      const data = await fetchPage(after);
+      all = all.concat(data.results);
+      if (!data.paging?.next?.after) break;
+      after = data.paging.next.after;
+    }
+    allDeals = all;
+    computeStats();
+    filterDeals();
+  } catch(e) {
+    document.getElementById('error-area').innerHTML =
+      `<div class="error-msg">Erreur de chargement: ${e.message}</div>`;
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="7"><div class="loading">Impossible de charger les données.</div></td></tr>`;
+  }
+}
+
+function computeStats() {
+  const total = allDeals.length;
+  const won = allDeals.filter(d => d.properties.dealstage === '2145974479').length;
+  const active = allDeals.filter(d => {
+    const s = d.properties.dealstage;
+    return !['2145974479','2145974480','2145974481'].includes(s);
+  }).length;
+  const totalAmount = allDeals
+    .filter(d => d.properties.dealstage === '2145974479' && d.properties.amount)
+    .reduce((s, d) => s + parseFloat(d.properties.amount), 0);
+  const commission = totalAmount * 0.1;
+
+  document.getElementById('s-total').textContent = total.toLocaleString('fr');
+  document.getElementById('s-won').textContent = won.toLocaleString('fr');
+  document.getElementById('s-active').textContent = active.toLocaleString('fr');
+  document.getElementById('s-commission').textContent =
+    commission > 0 ? `${commission.toLocaleString('fr', {minimumFractionDigits:0, maximumFractionDigits:0})} €` : '—';
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  currentPage = 0;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterDeals();
+}
+
+function filterDeals() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  filteredDeals = allDeals.filter(d => {
+    const p = d.properties;
+    const stage = p.dealstage;
+    const name = (p.dealname || '').toLowerCase();
+
+    // filter by type
+    if (currentFilter === 'active' && ['2145974479','2145974480','2145974481'].includes(stage)) return false;
+    if (currentFilter === 'won' && stage !== '2145974479') return false;
+    if (currentFilter === 'lost' && stage !== '2145974480') return false;
+
+    // search
+    if (q && !name.includes(q)) return false;
+    return true;
+  });
+  currentPage = 0;
+  renderTable();
+}
+
+function parseDealName(dealname) {
+  // Format: "FR - Nom Prénom +33XXXXXXXXX"
+  const match = dealname.match(/^FR\s*-\s*(.+?)\s+(\+\d+)$/);
+  if (match) return { name: match[1], phone: match[2] };
+  return { name: dealname.replace(/^FR\s*-\s*/, ''), phone: '' };
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const start = currentPage * PAGE_SIZE;
+  const page = filteredDeals.slice(start, start + PAGE_SIZE);
+
+  if (page.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="loading">Aucun résultat trouvé.</div></td></tr>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = page.map(d => {
+    const p = d.properties;
+    const { name, phone } = parseDealName(p.dealname || '');
+    const stage = STAGES[p.dealstage] || { label: p.dealstage || '—', cls: 'stage-default' };
+    const amount = p.amount ? parseFloat(p.amount) : null;
+    const commission = amount ? (amount * 0.1).toLocaleString('fr', {minimumFractionDigits:2, maximumFractionDigits:2}) : null;
+
+    return `<tr>
+      <td>
+        <div class="td-name">${name}</div>
+        <div class="td-sub">${formatDate(p.createdate)}</div>
+      </td>
+      <td class="td-mono">${phone || '—'}</td>
+      <td class="td-mono">—</td>
+      <td class="td-mono">${formatDate(p.createdate)}</td>
+      <td><span class="stage ${stage.cls}"><span class="stage-dot"></span>${stage.label}</span></td>
+      <td>${amount ? `<span class="amount">${amount.toLocaleString('fr', {minimumFractionDigits:2})} €</span>` : '<span class="amount amount-empty">—</span>'}</td>
+      <td>${commission ? `<span class="commission">${commission} €</span>` : '<span class="amount amount-empty">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const total = filteredDeals.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  document.getElementById('page-info').textContent =
+    `${start + 1}–${Math.min(start + PAGE_SIZE, total)} sur ${total.toLocaleString('fr')} leads`;
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+  document.getElementById('pagination').style.display = 'flex';
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  renderTable();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+loadAllDeals();
+</script>
+</body>
+</html>
