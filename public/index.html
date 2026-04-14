@@ -30,7 +30,6 @@
     min-height: 100vh;
   }
 
-  /* Grid noise texture */
   body::before {
     content:'';
     position:fixed;
@@ -44,9 +43,8 @@
     z-index:0;
   }
 
-  .wrap { position:relative; z-index:1; max-width: 1200px; margin:0 auto; padding: 0 24px 60px; }
+  .wrap { position:relative; z-index:1; max-width: 1400px; margin:0 auto; padding: 0 24px 60px; }
 
-  /* Header */
   header {
     display: flex;
     align-items: center;
@@ -56,11 +54,7 @@
     margin-bottom: 40px;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
+  .logo { display: flex; align-items: center; gap: 16px; }
 
   .logo-badge {
     background: var(--accent-dim);
@@ -73,24 +67,10 @@
     letter-spacing: 0.05em;
   }
 
-  .logo-title {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
+  .logo-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-sub { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
 
-  .logo-sub {
-    font-size: 12px;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    margin-top: 2px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
 
   .live-dot {
     width: 8px; height: 8px;
@@ -104,13 +84,8 @@
     50% { opacity:0.7; box-shadow: 0 0 0 6px rgba(79,209,168,0); }
   }
 
-  .live-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-  }
+  .live-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
 
-  /* Stats row */
   .stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -137,17 +112,11 @@
     margin-bottom: 10px;
   }
 
-  .stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-  }
-
+  .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
   .stat-value.accent { color: var(--accent); }
   .stat-value.amber { color: var(--amber); }
   .stat-value.blue { color: var(--blue); }
 
-  /* Controls */
   .controls {
     display: flex;
     gap: 12px;
@@ -192,7 +161,6 @@
     background: var(--accent-dim);
   }
 
-  /* Table */
   .table-wrap {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -200,10 +168,9 @@
     overflow: hidden;
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
+  .table-scroll { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; min-width: 1400px; }
 
   thead tr {
     background: #0d0d14;
@@ -211,7 +178,7 @@
   }
 
   th {
-    padding: 14px 20px;
+    padding: 14px 16px;
     text-align: left;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
@@ -225,37 +192,22 @@
   tbody tr {
     border-bottom: 1px solid var(--border);
     transition: background 0.15s;
-    cursor: pointer;
   }
 
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
 
   td {
-    padding: 16px 20px;
-    font-size: 14px;
+    padding: 14px 16px;
+    font-size: 13px;
     vertical-align: middle;
   }
 
-  .td-name {
-    font-weight: 600;
-    font-size: 14px;
-  }
+  .td-name { font-weight: 600; font-size: 14px; }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .td-wrap { max-width: 280px; white-space: normal; color: var(--text); font-size: 12px; line-height: 1.4; }
+  .td-addr { max-width: 220px; white-space: normal; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); line-height: 1.4; }
 
-  .td-sub {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 3px;
-  }
-
-  .td-mono {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  /* Stage badge */
   .stage {
     display: inline-flex;
     align-items: center;
@@ -273,30 +225,38 @@
 
   .stage-new    { background: rgba(107,158,255,0.1); border-color: rgba(107,158,255,0.3); color: var(--blue); }
   .stage-new .stage-dot { background: var(--blue); }
-
   .stage-active { background: rgba(240,192,96,0.1); border-color: rgba(240,192,96,0.3); color: var(--amber); }
   .stage-active .stage-dot { background: var(--amber); }
-
   .stage-won    { background: rgba(79,209,168,0.1); border-color: rgba(79,209,168,0.3); color: var(--accent); }
   .stage-won .stage-dot { background: var(--accent); }
-
   .stage-lost   { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.3); color: var(--red); }
   .stage-lost .stage-dot { background: var(--red); }
-
   .stage-default { background: rgba(107,107,136,0.1); border-color: rgba(107,107,136,0.3); color: var(--muted); }
   .stage-default .stage-dot { background: var(--muted); }
 
-  /* Amount */
   .amount {
     font-family: 'DM Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--accent);
     font-weight: 500;
+    white-space: nowrap;
   }
 
   .amount-empty { color: var(--border-bright); }
 
-  /* Loading / empty */
+  .check-yes {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(79,209,168,0.12);
+    border: 1px solid rgba(79,209,168,0.3);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+
+  .check-no { color: var(--border-bright); font-family: 'DM Mono', monospace; font-size: 12px; }
+
   .loading {
     display: flex;
     flex-direction: column;
@@ -319,7 +279,6 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Pagination */
   .pagination {
     display: flex;
     align-items: center;
@@ -328,12 +287,7 @@
     border-top: 1px solid var(--border);
   }
 
-  .page-info {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
+  .page-info { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
   .page-btns { display: flex; gap: 8px; }
 
   .page-btn {
@@ -351,7 +305,6 @@
   .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-  /* Error */
   .error-msg {
     background: rgba(255,107,107,0.08);
     border: 1px solid rgba(255,107,107,0.2);
@@ -363,16 +316,8 @@
     margin: 20px 0;
   }
 
-  /* Commission highlight */
-  .commission {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--accent);
-  }
-
   @media (max-width: 768px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
-    th:nth-child(n+4), td:nth-child(n+4) { display: none; }
   }
 </style>
 </head>
@@ -400,7 +345,7 @@
   </div>
 
   <div class="controls">
-    <input class="search-box" id="search" placeholder="Rechercher par nom, email, téléphone..." oninput="filterDeals()">
+    <input class="search-box" id="search" placeholder="Rechercher par nom, prénom, email, téléphone..." oninput="filterDeals()">
     <button class="filter-btn active" onclick="setFilter('all', this)">Tous</button>
     <button class="filter-btn" onclick="setFilter('active', this)">En cours</button>
     <button class="filter-btn" onclick="setFilter('won', this)">Signés</button>
@@ -410,22 +355,29 @@
   <div id="error-area"></div>
 
   <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Client</th>
-          <th>Contact</th>
-          <th>Adresse</th>
-          <th>Date réception</th>
-          <th>Phase</th>
-          <th>Montant HT</th>
-          <th>Commission</th>
-        </tr>
-      </thead>
-      <tbody id="tbody">
-        <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Chargement des leads...</div></td></tr>
-      </tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Téléphone</th>
+            <th>Mail</th>
+            <th>Adresse</th>
+            <th>Date réception</th>
+            <th>Date prise de contact</th>
+            <th>Commentaire</th>
+            <th>Phase</th>
+            <th>Montant HT</th>
+            <th>Date installation</th>
+            <th>Installation finalisée</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="12"><div class="loading"><div class="spinner"></div>Chargement des leads...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
     <div class="pagination" id="pagination" style="display:none">
       <span class="page-info" id="page-info"></span>
       <div class="page-btns">
@@ -437,8 +389,18 @@
 </div>
 
 <script>
+// ======================================================================
+// CONFIG — edita qui se i nomi interni delle proprietà HubSpot cambiano
+// ======================================================================
 const PIPELINE = '1378495685';
 const PAGE_SIZE = 20;
+
+// Proprietà custom del deal — metti qui il nome "internal" HubSpot.
+// Se non esistono o il nome è diverso, la cella resterà "—".
+const PROP_DATE_CONTACT      = 'date_de_prise_de_contact';     // Date de prise de contact
+const PROP_COMMENT           = 'description';                  // Commentaire (di default uso description)
+const PROP_DATE_INSTALLATION = 'date_installation_programmee'; // Date d'installation programmée
+const PROP_INSTALL_DONE      = 'installation_finalisee';       // Installation finalisée (checkbox o enum)
 
 const STAGES = {
   '2906355919': { label: 'New leads - To dispatch', cls: 'stage-new' },
@@ -458,50 +420,122 @@ const STAGES = {
 };
 
 let allDeals = [];
+let contactMap = {}; // contactId -> { firstname, lastname, email, phone }
 let filteredDeals = [];
 let currentFilter = 'all';
 let currentPage = 0;
-let cursors = [null];
 
-async function fetchPage(after) {
+// -----------------------------------------------------------------------
+// API helpers
+// -----------------------------------------------------------------------
+async function hubspotCall(path, body) {
+  const res = await fetch('/api/deals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, body })
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`HubSpot ${res.status}: ${txt.slice(0,200)}`);
+  }
+  return res.json();
+}
+
+async function fetchDealPage(after) {
   const body = {
-    filterGroups: [{ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: PIPELINE }] }],
-    properties: ['dealname','dealstage','amount','createdate','hs_lastmodifieddate',
-                 'phone','email','address','city','zip'],
+    filterGroups: [{
+      filters: [
+        { propertyName: 'pipeline', operator: 'EQ', value: PIPELINE },
+        { propertyName: 'dealname', operator: 'CONTAINS_TOKEN', value: 'Casawatt' }
+      ]
+    }],
+    properties: [
+      'dealname','dealstage','amount','createdate','hs_lastmodifieddate',
+      'address','city','zip',
+      PROP_DATE_CONTACT, PROP_COMMENT, PROP_DATE_INSTALLATION, PROP_INSTALL_DONE
+    ],
     sorts: [{ propertyName: 'createdate', direction: 'DESCENDING' }],
     limit: 100
   };
   if (after) body.after = after;
-
-  const res = await fetch('/api/deals', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) throw new Error(`HubSpot API error: ${res.status}`);
-  return res.json();
+  return hubspotCall('/crm/v3/objects/deals/search', body);
 }
 
+async function fetchAssociations(dealIds) {
+  // Returns mapping dealId -> [contactIds]
+  const out = {};
+  if (!dealIds.length) return out;
+  // Batch max 100 per call
+  for (let i = 0; i < dealIds.length; i += 100) {
+    const chunk = dealIds.slice(i, i + 100);
+    const data = await hubspotCall('/crm/v4/associations/deals/contacts/batch/read', {
+      inputs: chunk.map(id => ({ id }))
+    });
+    (data.results || []).forEach(r => {
+      const from = r.from?.id || r._from?.id;
+      const tos = (r.to || []).map(t => t.toObjectId || t.id);
+      if (from) out[from] = tos;
+    });
+  }
+  return out;
+}
+
+async function fetchContacts(contactIds) {
+  const out = {};
+  if (!contactIds.length) return out;
+  for (let i = 0; i < contactIds.length; i += 100) {
+    const chunk = contactIds.slice(i, i + 100);
+    const data = await hubspotCall('/crm/v3/objects/contacts/batch/read', {
+      properties: ['firstname','lastname','email','phone'],
+      inputs: chunk.map(id => ({ id }))
+    });
+    (data.results || []).forEach(c => {
+      out[c.id] = c.properties || {};
+    });
+  }
+  return out;
+}
+
+// -----------------------------------------------------------------------
+// Main loader
+// -----------------------------------------------------------------------
 async function loadAllDeals() {
   try {
+    // 1. Fetch deals (max 500)
     let after = null;
     let all = [];
-    // load up to 500 deals (5 pages of 100)
     for (let i = 0; i < 5; i++) {
-      const data = await fetchPage(after);
-      all = all.concat(data.results);
+      const data = await fetchDealPage(after);
+      all = all.concat(data.results || []);
       if (!data.paging?.next?.after) break;
       after = data.paging.next.after;
     }
     allDeals = all;
+
+    // 2. Fetch associations (deal -> contact)
+    const dealIds = allDeals.map(d => d.id);
+    const assocMap = await fetchAssociations(dealIds);
+
+    // Attach primary contact ID to each deal
+    allDeals.forEach(d => {
+      const cids = assocMap[d.id] || [];
+      d._contactId = cids[0] || null;
+    });
+
+    // 3. Fetch all unique contacts
+    const allContactIds = [...new Set(
+      allDeals.map(d => d._contactId).filter(Boolean)
+    )];
+    contactMap = await fetchContacts(allContactIds);
+
     computeStats();
     filterDeals();
   } catch(e) {
+    console.error(e);
     document.getElementById('error-area').innerHTML =
       `<div class="error-msg">Erreur de chargement: ${e.message}</div>`;
     document.getElementById('tbody').innerHTML =
-      `<tr><td colspan="7"><div class="loading">Impossible de charger les données.</div></td></tr>`;
+      `<tr><td colspan="12"><div class="loading">Impossible de charger les données.</div></td></tr>`;
   }
 }
 
@@ -532,36 +566,55 @@ function setFilter(f, btn) {
   filterDeals();
 }
 
+function contactOf(d) {
+  return (d._contactId && contactMap[d._contactId]) || {};
+}
+
 function filterDeals() {
   const q = document.getElementById('search').value.toLowerCase().trim();
   filteredDeals = allDeals.filter(d => {
-    const p = d.properties;
-    const stage = p.dealstage;
-    const name = (p.dealname || '').toLowerCase();
-
-    // filter by type
+    const stage = d.properties.dealstage;
     if (currentFilter === 'active' && ['2145974479','2145974480','2145974481'].includes(stage)) return false;
     if (currentFilter === 'won' && stage !== '2145974479') return false;
     if (currentFilter === 'lost' && stage !== '2145974480') return false;
 
-    // search
-    if (q && !name.includes(q)) return false;
+    if (q) {
+      const c = contactOf(d);
+      const hay = [
+        c.firstname, c.lastname, c.email, c.phone,
+        d.properties.dealname, d.properties.address, d.properties.city, d.properties.zip
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
   currentPage = 0;
   renderTable();
 }
 
-function parseDealName(dealname) {
-  // Format: "FR - Nom Prénom +33XXXXXXXXX"
-  const match = dealname.match(/^FR\s*-\s*(.+?)\s+(\+\d+)$/);
-  if (match) return { name: match[1], phone: match[2] };
-  return { name: dealname.replace(/^FR\s*-\s*/, ''), phone: '' };
-}
-
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function formatAddress(p) {
+  const parts = [p.address, [p.zip, p.city].filter(Boolean).join(' ')].filter(Boolean);
+  return parts.length ? parts.join('<br>') : '—';
+}
+
+function formatBool(v) {
+  if (v === true || v === 'true' || v === 'yes' || v === 'Oui' || v === 'oui' || v === '1') {
+    return `<span class="check-yes">Oui</span>`;
+  }
+  if (!v) return `<span class="check-no">—</span>`;
+  // enum / string value
+  return `<span class="check-yes">${escapeHtml(String(v))}</span>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function renderTable() {
@@ -570,33 +623,34 @@ function renderTable() {
   const page = filteredDeals.slice(start, start + PAGE_SIZE);
 
   if (page.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="loading">Aucun résultat trouvé.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12"><div class="loading">Aucun résultat trouvé.</div></td></tr>`;
     document.getElementById('pagination').style.display = 'none';
     return;
   }
 
   tbody.innerHTML = page.map(d => {
     const p = d.properties;
-    const { name, phone } = parseDealName(p.dealname || '');
+    const c = contactOf(d);
     const stage = STAGES[p.dealstage] || { label: p.dealstage || '—', cls: 'stage-default' };
     const amount = p.amount ? parseFloat(p.amount) : null;
-    const commission = amount ? (amount * 0.1).toLocaleString('fr', {minimumFractionDigits:2, maximumFractionDigits:2}) : null;
+    const comment = p[PROP_COMMENT];
 
     return `<tr>
-      <td>
-        <div class="td-name">${name}</div>
-        <div class="td-sub">${formatDate(p.createdate)}</div>
-      </td>
-      <td class="td-mono">${phone || '—'}</td>
-      <td class="td-mono">—</td>
+      <td class="td-name">${escapeHtml(c.lastname || '—')}</td>
+      <td>${escapeHtml(c.firstname || '—')}</td>
+      <td class="td-mono">${escapeHtml(c.phone || '—')}</td>
+      <td class="td-mono">${c.email ? `<a href="mailto:${escapeHtml(c.email)}" style="color:var(--blue);text-decoration:none;">${escapeHtml(c.email)}</a>` : '—'}</td>
+      <td class="td-addr">${formatAddress(p)}</td>
       <td class="td-mono">${formatDate(p.createdate)}</td>
+      <td class="td-mono">${formatDate(p[PROP_DATE_CONTACT])}</td>
+      <td class="td-wrap">${comment ? escapeHtml(comment) : '<span class="check-no">—</span>'}</td>
       <td><span class="stage ${stage.cls}"><span class="stage-dot"></span>${stage.label}</span></td>
       <td>${amount ? `<span class="amount">${amount.toLocaleString('fr', {minimumFractionDigits:2})} €</span>` : '<span class="amount amount-empty">—</span>'}</td>
-      <td>${commission ? `<span class="commission">${commission} €</span>` : '<span class="amount amount-empty">—</span>'}</td>
+      <td class="td-mono">${formatDate(p[PROP_DATE_INSTALLATION])}</td>
+      <td>${formatBool(p[PROP_INSTALL_DONE])}</td>
     </tr>`;
   }).join('');
 
-  // Pagination
   const total = filteredDeals.length;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   document.getElementById('page-info').textContent =
